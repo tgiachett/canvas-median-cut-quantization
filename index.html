@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>canvas-median-cut-quantization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:image" content="https://tgiachett.github.io/canvas-median-cut-quantization/screenshot.png"/>
+  </head>
+  <body>
+    <p>Enter the number of brightness steps to divide the image into and click submit</p>
+    <button id="submit">Get Palette</button>
+    <form>
+      <button id="changePic">Change Pic</button>
+      Number of Color Channels:<input id="channels" type="number"><br>
+    </form>
+    <p id="textOut"></p>
+
+    <canvas id="canvas"></canvas>
+    <canvas id="pal"></canvas>
+   
+
+   <script src="pixelManip.js"></script> 
+  </body>
+</html>
