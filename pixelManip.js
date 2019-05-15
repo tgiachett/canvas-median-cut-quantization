@@ -1,3 +1,8 @@
+const picturesArr = ['./Assets/Images/Apollo11.jpg','./Assets/Images/Nasa1.jpg', './Assets/Images/Maine1.jpg', './Assets/Images/Tahoe1.jpg', './Assets/Images/Maine2.jpg', './Assets/Images/Utah1.jpg', './Assets/Images/Profile_Pic.png', './Assets/Images/Maine3.jpg', './Assets/Images/Maine5.jpg', './Assets/Images/NC1.jpg', './Assets/Images/Dolomite1.jpg', './Assets/Images/Carmel1.jpg'];
+let pictureIndex = 0;
+const picNavForward = document.getElementById('forward');
+const picNavBackward = document.getElementById('back');
+const clear = document.getElementById('clear');
 const sub = document.getElementById("submit");
 const form = document.getElementById("channels");
 const c = document.getElementById("canvas");
@@ -5,15 +10,15 @@ const ctx = c.getContext('2d');
 const paletteCanvas = document.getElementById('pal');
 const ctxPal = paletteCanvas.getContext('2d');
 const textOut = document.getElementById('textOut');
-const changePic = document.getElementById('changePic');
 let outPal;
+const palDataButton = document.getElementById('palDataExpand');
 textOut.style.color = 'red';
 let img = new Image();
 let pictureBool = 0;
 let imgOne = './Poppy.jpg';
 let imgTwo = './Saturn.jpg';
 img.onload = init; img.crossOrigin = "";
-img.src = imgOne;
+img.src = `${picturesArr[pictureIndex]}`;
 
 function init() {
     setup(this);
@@ -25,6 +30,58 @@ function setup(img) {
     ctx.drawImage(img, 0, 0);;
 }
 
+//image nave
+picNavForward.addEventListener("click", function(event) {
+    event.preventDefault();
+
+    if(pictureIndex === picturesArr.length-1) {
+	pictureIndex = -1;
+	
+    }
+    pictureIndex++;
+    img.src = `${picturesArr[pictureIndex]}`;
+    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+    textOut.innerHTML = "";
+    setup(img);
+
+    
+});
+
+picNavBackward.addEventListener("click", function(event) {
+    event.preventDefault();
+    if(pictureIndex === 0) {
+	pictureIndex = picturesArr.length;
+	
+    }
+    pictureIndex--;
+    img.src = `${picturesArr[pictureIndex]}`;
+    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+    textOut.innerHTML = "";
+    setup(img);
+
+    
+});
+
+clear.addEventListener("click", function(event) {
+    event.preventDefault();
+    img.src = `${picturesArr[pictureIndex]}`;
+    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+    textOut.innerHTML = "";
+    setup(img);
+
+    
+});
+
+palDataButton.addEventListener("click", function(event) {
+    
+	event.preventDefault();
+	textOut.innerHTML = JSON.stringify(outPal);
+	
+   
+
+    
+});
+
 //handle submit keypress
 form.onkeypress = function(e){
     if (!e) e = window.event;
@@ -34,10 +91,10 @@ form.onkeypress = function(e){
 	setup(img);
 	let channels  = form.value;
 	if(powerOfTwo(channels)) {
-	    
+	    textOut.innerHTML = "";
 	    outPal = medianCutPalette(channels);
 	    textOut.style.color = 'blue';
-	    textOut.innerHTML = JSON.stringify(outPal);
+	    
 	    
 	} else {
 	    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
@@ -48,24 +105,6 @@ form.onkeypress = function(e){
 };
 
 
-changePic.addEventListener("click", function(event) {
-    event.preventDefault();
-    console.log(img.src);
-    if(!pictureBool) {
-console.log("fired");
-	img.src = imgTwo;
-	pictureBool = 1;
-	ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-    } else {
-	img.src = imgOne;
-	pictureBool = 0;
-	ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-    }
-    setup(img);
-    
-    
-});
-
 
 //handle clicks
 sub.addEventListener("click", function(event) {
@@ -73,10 +112,10 @@ sub.addEventListener("click", function(event) {
     setup(img);
     let  channels = form.value;
     if(powerOfTwo(channels)) {
-	
+	textOut.innerHTML = "";
 	outPal = medianCutPalette(channels);
 	textOut.style.color = 'blue';
-	textOut.innerHTML = JSON.stringify(outPal);
+	
     } else {
 	ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
 	textOut.innerHTML = "Must be power of 2";
