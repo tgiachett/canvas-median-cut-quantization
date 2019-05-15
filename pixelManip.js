@@ -3,9 +3,11 @@ let pictureIndex = 0;
 const picNavForward = document.getElementById('forward');
 const picNavBackward = document.getElementById('back');
 const clear = document.getElementById('clear');
-const sub = document.getElementById("submit");
+const sub = document.getElementById('submit');
 const form = document.getElementById("channels");
-const c = document.getElementById("canvas");
+const quantize = document.getElementById('quantize');
+const mainDriverButtons = document.getElementById('mainDriverbuttons');
+const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
 const paletteCanvas = document.getElementById('pal');
 const ctxPal = paletteCanvas.getContext('2d');
@@ -28,6 +30,9 @@ function setup(img) {
     
     c.width = img.naturalWidth; c.height = img.naturalHeight;
     ctx.drawImage(img, 0, 0);;
+    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+    quantize.style.display = "none";
+    textOut.innerHTML = "";
 }
 
 //image nave
@@ -40,8 +45,6 @@ picNavForward.addEventListener("click", function(event) {
     }
     pictureIndex++;
     img.src = `${picturesArr[pictureIndex]}`;
-    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-    textOut.innerHTML = "";
     setup(img);
 
     
@@ -55,8 +58,6 @@ picNavBackward.addEventListener("click", function(event) {
     }
     pictureIndex--;
     img.src = `${picturesArr[pictureIndex]}`;
-    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-    textOut.innerHTML = "";
     setup(img);
 
     
@@ -65,8 +66,6 @@ picNavBackward.addEventListener("click", function(event) {
 clear.addEventListener("click", function(event) {
     event.preventDefault();
     img.src = `${picturesArr[pictureIndex]}`;
-    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-    textOut.innerHTML = "";
     setup(img);
 
     
@@ -74,10 +73,10 @@ clear.addEventListener("click", function(event) {
 
 palDataButton.addEventListener("click", function(event) {
     
-	event.preventDefault();
-	textOut.innerHTML = JSON.stringify(outPal);
-	
-   
+    event.preventDefault();
+    textOut.innerHTML = JSON.stringify(outPal);
+    
+    
 
     
 });
@@ -93,6 +92,7 @@ form.onkeypress = function(e){
 	if(powerOfTwo(channels)) {
 	    textOut.innerHTML = "";
 	    outPal = medianCutPalette(channels);
+	    quantize.style.display = "block";
 	    textOut.style.color = 'blue';
 	    
 	    
@@ -114,12 +114,22 @@ sub.addEventListener("click", function(event) {
     if(powerOfTwo(channels)) {
 	textOut.innerHTML = "";
 	outPal = medianCutPalette(channels);
-	textOut.style.color = 'blue';
+	quantize.style.display = "block";
+	    textOut.style.color = 'blue';
+	    
+	} else {
+	    ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+	    textOut.innerHTML = "Must be power of 2";
+	}
 	
-    } else {
-	ctxPal.clearRect(0, 0, paletteCanvas.width, paletteCanvas.height);
-	textOut.innerHTML = "Must be power of 2";
-    }
+    });
+
+quantize.addEventListener("click", function(event) {
+    event.preventDefault();
+    let idataSrc = ctx.getImageData(0,0, c.width, c.height),
+	idataTrg = ctx.createImageData(c.width, c.height);
+    
+    compressColors(outPal, idataSrc, idataTrg);
     
 });
 
@@ -130,11 +140,10 @@ function medianCutPalette (num) {
     // set up initial image source and target container
     let idataSrc = ctx.getImageData(0,0, c.width, c.height),
 	idataTrg = ctx.createImageData(c.width, c.height);
-    // let maxRange = getMaxRange(idataSrc);
     
     let pal = getPal(idataSrc, num);
     createPal(paletteCanvas, pal, ctxPal);
-    compressColors(pal, idataSrc, idataTrg);
+    
     return pal;
 };
 
