@@ -124,39 +124,48 @@ sub.addEventListener("click", function(event) {
 });
 
 
-function compressColors (pal,src, trg) {
-     let dataSrc = src.data;
-    let dataTrg = trg.data;
-    let len = dataSrc.length;
-    for (let i = 0; i < len; i += 4) {
-	let shortest = 255;
-	let shortestIndex;
-	for(let j = 0; j < pal.length; j++) {
-	    let dist = getDistance(pal[j], [dataSrc[i], dataSrc[i+1], dataSrc[i+2]]);
-	    if (dist < shortest) {
-		shortest = dist;
-		shortestIndex = j;
-	    }
-	}
-	dataTrg[i] = pal[shortestIndex][0];
-	dataTrg[i+1] = pal[shortestIndex][1];
-	dataTrg[i+2] = pal[shortestIndex][2];
-	dataTrg[i+3] = 255;
-	
+// main driver
+function medianCutPalette (num) {
+
+    // set up initial image source and target container
+    let idataSrc = ctx.getImageData(0,0, c.width, c.height),
+	idataTrg = ctx.createImageData(c.width, c.height);
+    // let maxRange = getMaxRange(idataSrc);
+    
+    let pal = getPal(idataSrc, num);
+    createPal(paletteCanvas, pal, ctxPal);
+    compressColors(pal, idataSrc, idataTrg);
+    return pal;
+};
+
+
+//get the palette values
+function getPal(src, num) {
+    
+    let dataSrc = src.data,
+	len = dataSrc.length;
+    let pixelSet = [];
+
+    for (let i = 0;i < len; i += 4) {
+	let groupedPixelData = [dataSrc[i], dataSrc[i+1], dataSrc[i+2]];
+	pixelSet.push(groupedPixelData);
     }
-    console.log(trg);
-    ctx.putImageData(trg, 0, 0);
-    return trg;
+
+    // super inefficient way of getting rid of unique colors?
+    let uniqueColorSet = [...new Set(pixelSet.map(color => color.toString()))];
+    let uniqueColorsArr = uniqueColorSet.map(color => color.split(','));
+    //get the initial max range color for the whole "bucket"
+    let maxRangeInitial = getMaxRangeColorIndex(uniqueColorsArr);
+    uniqueColorsArr.sort(function(a, b) {return +a[maxRangeInitial] - +b[maxRangeInitial];});
+    
+    let bucketsArr = [];
+    // use cut to seperate into buckets and get max range color for each bucket, sort by that
+    cut(uniqueColorsArr, bucketsArr, uniqueColorsArr, num);
+    // get the color averages for each bucket
+    let palette = getColorAverages(bucketsArr);
+    
+    return palette;
 }
-
-
-function getDistance(a, b) {
-    let dist = Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1], 2) + Math.pow(a[2]-b[2], 2));
-    return dist;
-}
-
-
-
 
 //palette display setup
 function createPal (palletteCanvas, palette, ctxPal) {
@@ -181,44 +190,39 @@ function createPal (palletteCanvas, palette, ctxPal) {
 }
 
 
-// main driver
-function medianCutPalette (num) {
 
-    // set up initial image source and target container
-    let idataSrc = ctx.getImageData(0,0, c.width, c.height),
-	idataTrg = ctx.createImageData(c.width, c.height);
-    let maxRange = getMaxRange(idataSrc);
-    
-    let pal = getPal(idataSrc, maxRange, num);
-    createPal(paletteCanvas, pal, ctxPal);
-    compressColors(pal, idataSrc, idataTrg);
-    return pal;
-};
 
-//get the palette values
-function getPal(src, max, num) {
-    
-    let dataSrc = src.data,
-	len = dataSrc.length;
-    let pixelSet = [];
-
-    for (let i = 0;i < len; i += 4) {
-	let groupedPixelData = [dataSrc[i], dataSrc[i+1], dataSrc[i+2]];
-	pixelSet.push(groupedPixelData);
+function compressColors (pal,src, trg) {
+     let dataSrc = src.data;
+    let dataTrg = trg.data;
+    let len = dataSrc.length;
+    for (let i = 0; i < len; i += 4) {
+	let shortest = 255;
+	let shortestIndex;
+	for(let j = 0; j < pal.length; j++) {
+	    let dist = getDistance(pal[j], [dataSrc[i], dataSrc[i+1], dataSrc[i+2]]);
+	    if (dist < shortest) {
+		shortest = dist;
+		shortestIndex = j;
+	    }
+	}
+	dataTrg[i] = pal[shortestIndex][0];
+	dataTrg[i+1] = pal[shortestIndex][1];
+	dataTrg[i+2] = pal[shortestIndex][2];
+	dataTrg[i+3] = 255;
+	
     }
 
-    // super inefficient way of getting rid of unique colors?
-    let uniqueColorSet = [...new Set(pixelSet.map(color => color.toString()))];
-    let uniqueColorsArr = uniqueColorSet.map(color => color.split(','));
-    uniqueColorsArr.sort(function(a, b) {return +a[max] - +b[max];});
-    
-    let bucketsArr = [];
-
-    cut(uniqueColorsArr, bucketsArr, uniqueColorsArr, num);
-    let palette = getColorAverages(bucketsArr);
-    
-    return palette;
+    ctx.putImageData(trg, 0, 0);
+    return trg;
 }
+
+
+function getDistance(a, b) {
+    let dist = Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1], 2) + Math.pow(a[2]-b[2], 2));
+    return dist;
+}
+
 
 function getColorAverages (bucketsArr) {
     let palette = [];
@@ -247,6 +251,9 @@ function cut (arr, bucketsArr, master, buckets){
 	return;
     } else {
 	buckets /= 2;
+	// get max range for each bucket and sort by that
+	let maxRange = getMaxRangeColorIndex(arr);
+	arr.sort(function(a, b) {return +a[maxRange] - +b[maxRange];});
 	let middle = Math.floor(arr.length/2);
 	let firstHalf = arr.slice(0, middle-1);
 	let secondHalf = arr.slice(middle);
@@ -254,37 +261,38 @@ function cut (arr, bucketsArr, master, buckets){
 	cut(secondHalf, bucketsArr, master, buckets);
     }
 }
-
-
-// find the color with the largest range
-
-function getMaxRange (src) {
-    let dataSrc = src.data;
-    let len = dataSrc.length;
+// takes processed color groups instead of canvas data array
+function getMaxRangeColorIndex (src) {
+    
+    let len = src.length;
     let rMin = 255;
     let rMax = 0;
     let gMin = 255;
     let gMax = 0;
     let bMin = 255;
     let bMax = 0;
-    for (let i = 0; i < len; i += 4) {
-	if(dataSrc[0] < rMin) {
-	    rMin = dataSrc[0];
+    for (let i = 0; i < len; i ++) {
+	let red = +src[i][0];
+	let green = +src[i][1];
+	let blue = +src[i][2];
+
+	if(red < rMin) {
+	    rMin = red;
 	}
-	if(dataSrc[0] > rMax) {
-	    rMax = dataSrc[0];
+	if(red > rMax) {
+	    rMax = red;
 	}
-	if(dataSrc[1] < gMin) {
-	    gMin = dataSrc[1];
+	if(green < gMin) {
+	    gMin = green;
 	}
-	if(dataSrc[1] > gMax) {
-	    gMax = dataSrc[1];
+	if(green > gMax) {
+	    gMax = green;
 	}
-	if(dataSrc[2] < bMin) {
-	    bMin = dataSrc[2];
+	if(blue < bMin) {
+	    bMin = blue;
 	}
-	if(dataSrc[2] > bMax) {
-	    bMax = dataSrc[2];
+	if(blue > bMax) {
+	    bMax = blue;
 	}
     }
     let rRange = rMax - rMin;
@@ -294,10 +302,7 @@ function getMaxRange (src) {
     let set = [[rRange, 0], [gRange, 1], [bRange, 2]];
     set.sort(function(a, b){return a[0] - b[0];});
     return set[set.length-1][1];
-    
 }
-
-
 
 function powerOfTwo(x) {
     return (Math.log(x)/Math.log(2)) % 1 === 0;
