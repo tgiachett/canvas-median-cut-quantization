@@ -22,5 +22,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+#devtools
 .tern-project
 .tern-port
+.indium.json

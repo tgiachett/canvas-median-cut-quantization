@@ -1,4 +1,21 @@
-const picturesArr = ['./Assets/Images/Apollo11.jpg','./Assets/Images/Nasa1.jpg', './Assets/Images/Maine1.jpg', './Assets/Images/Tahoe1.jpg', './Assets/Images/Maine2.jpg', './Assets/Images/Utah1.jpg', './Assets/Images/Profile_Pic.png', './Assets/Images/Maine3.jpg', './Assets/Images/Maine5.jpg', './Assets/Images/NC1.jpg', './Assets/Images/Dolomite1.jpg', './Assets/Images/Carmel1.jpg'];
+let picturesArr = [
+  'Assets/Images/Maine5.jpg',
+  'Assets/Images/Nasa1.jpg',
+  'Assets/Images/Carmel1.jpg',
+  'Assets/Images/Tahoe1.jpg',
+  'Assets/Images/Apollo11.jpg',
+  'Assets/Images/Profile_Pic.png',
+  'Assets/Images/Poppy.jpg',
+  'Assets/Images/Saturn.jpg',
+  'Assets/Images/Maine3.jpg',
+  'Assets/Images/screenshot.jpg',
+  'Assets/Images/Dolomite1.jpg',
+  'Assets/Images/download.jpeg',
+  'Assets/Images/Maine1.jpg',
+  'Assets/Images/NC1.jpg',
+  'Assets/Images/Maine2.jpg',
+  'Assets/Images/Utah1.jpg'
+];
 let pictureIndex = 0;
 const picNavForward = document.getElementById('forward');
 const picNavBackward = document.getElementById('back');
@@ -17,10 +34,10 @@ const palDataButton = document.getElementById('palDataExpand');
 textOut.style.color = 'red';
 let img = new Image();
 let pictureBool = 0;
-let imgOne = './Poppy.jpg';
-let imgTwo = './Saturn.jpg';
+
 img.onload = init; img.crossOrigin = "";
 img.src = `${picturesArr[pictureIndex]}`;
+
 
 function init() {
     setup(this);
@@ -254,7 +271,7 @@ function getColorAverages (bucketsArr) {
 }
 
 // make color buckets
-function cut (arr, bucketsArr, master, buckets){
+function cut (arr, bucketsArr, master, buckets) {
     if(buckets === 1) {
 	bucketsArr.push(arr);
 	return;
